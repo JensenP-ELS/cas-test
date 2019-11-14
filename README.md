@@ -1,47 +1,81 @@
-# Central Authentication Service (CAS) [![License](https://img.shields.io/hexpm/l/plug.svg)](https://github.com/Jasig/cas/blob/master/LICENSE)
+# Central Authentication Service (CAS) for local testing and development
 
-## Introduction
-This repo hosts the [Docker](https://www.docker.com/) build configuration to run CAS with predefined users over http or https. See the `Dockerfile` for more info.
+This image is **NOT** intended for a production environment.
 
-This docker image is intended for development use only. Specifically, when developing a CAS authentication client and a production CAS installation is not accessible, this Docker container provides that service locally. Do not use this image in production.
+This image contains a pre-configured [CAS][0] service instance useful for a development and/or testing environment. It is intended for use on a developer machine to run a local CAS service where an authentication client is being developed and/or tested. As such, it is configured to allow all services over HTTP or HTTPS and user credentials are defined as a static configuration in the `cas.properties` file.
 
+## How to use this image
 
-## Configuration
+Use this image only in a development/testing scenario.
 
-### Image
-* The image will be available on the host via ports `8080` and `8443`
-* The image may be accessed via the host browser
+### Start a CAS server instance
 
-## CAS Overlay
-* The build will automatically copy the contents of the `src\main\webapp` to the docker image.
-
-### SSL
-* The default keystore is `etc/thekeystore`.
-* The password for the keystore is `changeit`.
-
-## Run
+Starting a CAS instance is done on the command line:
 
 ```bash
-docker run -p 8080:8080 -p 8443:8443 -d --name="cas" thewidgetsmith/cas-devl
+docker run -p 8080:8080 -p 8443:8443 -d --name=cas utahstate/cas-devl:tag
 ```
 
-## Usage
+Be sure to replace `tag` with the CAS version desired. See the [Tags][1] tab for supported CAS versions.
 
-### Users
-You can login using any of the users defined in `cas.properties`.
+### Include in docker-compose
 
-Users and passwords are defined with the following line:
+Example `docker-compose.yml` for `cas`:
+
+```yml
+version: '3'
+
+services:
+  cas:
+    image: utahstate/cas-devl:v5.3.10
+    ports:
+      - 8080:8080
+      - 8443:8443
+```
+
+Run `docker-compose up`, wait for it to initialize, and then visit `http://localhost:8080`.
+
+## User Credentials
+
+User login credentials are defined in `cas.properties`.
+
+### Adding/Changing user credentials
+
+Default user credentials are as follows:
 
 ```
-accept.authn.users=admin1::admin1,admin2::admin2,admin3::admin3
+cas.authn.accept.users=admin1::admin1,admin2::admin2,admin3::admin3
 ```
 
-Additional users and passwords can be appended to this line.
+Default user credentials can be replaced by mounting a different `cas.properties` file containing the desired user credentials.
 
-## Notes
+Example `docker-compose.yml` file using a different `cas.properties` file:
+
+```yml
+version: '3'
+
+services:
+  cas:
+    image: utahstate/cas-devl:v5.3.10
+    ports:
+      - 8080:8080
+      - 8443:8443
+
+volumes:
+  - ./cas.properties:/etc/cas/config/cas/properties
+```
+
+This assumes that the new `cas.properties` file is located in the same directory as the `docker-compose.yml` file.
+
+## Additional Notes
 
 ### Generate New Certificate
+
+The keystore is located at `etc/cas/thekeystore` and was generated using the following command:
 
 ```
 keytool -genkeypair -alias cas -keyalg RSA -keypass changeit -storepass changeit -keystore ./thekeystore -dname "CN=cas.example.org,OU=Example,OU=Org,C=AU" -ext SAN="dns:example.org,dns:localhost,ip:127.0.0.1"
 ```
+
+[0]: https://www.apereo.org/projects/cas
+[1]: https://hub.docker.com/repository/docker/utahstate/cas-devl/tags
