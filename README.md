@@ -13,7 +13,7 @@ Use this image only in a development/testing scenario.
 Starting a CAS instance is done on the command line:
 
 ```bash
-docker run -p 8080:8080 -p 8443:8443 -d --name=cas utahstate/cas-devl:tag
+docker run -p 8080:8080 -p 8443:8443 -d --name=cas thewidgetsmith/cas-devl:tag
 ```
 
 Be sure to replace `tag` with the CAS version desired. See the [Tags][1] tab for supported CAS versions.
@@ -27,13 +27,13 @@ version: '3'
 
 services:
   cas:
-    image: utahstate/cas-devl:v5.3.10
+    image: thewidgetsmith/cas-devl:v5.3.10
     ports:
       - 8080:8080
       - 8443:8443
 ```
 
-Run `docker-compose up`, wait for it to initialize, and then visit `http://localhost:8080`.
+Run `docker-compose up`, wait for it to initialize, and then visit `http://localhost:8080/cas/`.
 
 ## User Credentials
 
@@ -43,7 +43,7 @@ User login credentials are defined in `cas.properties`.
 
 Default user credentials are as follows:
 
-```
+```properties
 cas.authn.accept.users=admin1::admin1,admin2::admin2,admin3::admin3
 ```
 
@@ -56,16 +56,15 @@ version: '3'
 
 services:
   cas:
-    image: utahstate/cas-devl:v5.3.10
+    image: thewidgetsmith/cas-devl:v5.3.10
     ports:
       - 8080:8080
       - 8443:8443
-
-volumes:
-  - ./cas.properties:/etc/cas/config/cas/properties
+    volumes:
+      - ./cas.local.properties:/etc/cas/config/cas.properties:ro
 ```
 
-This assumes that the new `cas.properties` file is located in the same directory as the `docker-compose.yml` file.
+This assumes that the new `cas.local.properties` file is located in the same directory as the `docker-compose.yml` file.
 
 ## Additional Notes
 
@@ -73,9 +72,9 @@ This assumes that the new `cas.properties` file is located in the same directory
 
 The keystore is located at `etc/cas/thekeystore` and was generated using the following command:
 
-```
-keytool -genkeypair -alias cas -keyalg RSA -keypass changeit -storepass changeit -keystore ./thekeystore -dname "CN=cas.example.org,OU=Example,OU=Org,C=AU" -ext SAN="dns:example.org,dns:localhost,ip:127.0.0.1"
+```bash
+keytool -genkeypair -storetype PKCS12 -alias cas -keyalg RSA -keypass changeit -storepass changeit -keystore ./thekeystore -dname "CN=CAS.EXAMPLE.COM,OU=CAS,OU=EXAMPLE,O=DEVELOPER,C=US" -ext SAN="dns:example.com,dns:localhost,ip:127.0.0.1"
 ```
 
 [0]: https://www.apereo.org/projects/cas
-[1]: https://hub.docker.com/repository/docker/utahstate/cas-devl/tags
+[1]: https://hub.docker.com/repository/docker/thewidgetsmith/cas-devl/tags
